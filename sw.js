@@ -1,5 +1,5 @@
 // Эм & Уналт — offline service worker
-const CACHE = 'em-unalt-v1';
+const CACHE = 'em-unalt-v3';
 const ASSETS = [
   './',
   './index.html',
@@ -28,6 +28,8 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET') return;
+  // Only handle same-origin requests; let Google APIs / external calls go straight to network
+  if (new URL(req.url).origin !== self.location.origin) return;
   // For navigations, serve cached app shell when offline
   if (req.mode === 'navigate') {
     e.respondWith(
