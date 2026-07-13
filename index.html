@@ -24,8 +24,8 @@
     --bg:#F4F7F6;
     --line:#E1E8E6;
     --text:#1F2D2B;
-    --muted:#8A9A98;
-    --muted2:#AEBCBA;
+    --muted:#677876;
+    --muted2:#8A9A98;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   body{margin:0; font-family:-apple-system,'Segoe UI',Roboto,sans-serif; background:var(--bg); color:var(--text);}
@@ -48,7 +48,7 @@
   .quickic.mood{background:var(--accent-light); color:var(--accent);}
   .quickic.med{background:var(--green2-light); color:var(--green2);}
   .quickic.seizure{background:var(--red-light); color:var(--red);}
-  .quicklabel{font-size:11.5px; font-weight:600; color:var(--text); text-align:center; line-height:1.2;}
+  .quicklabel{font-size:12.5px; font-weight:600; color:var(--text); text-align:center; line-height:1.2;}
   .actionbtn{border-radius:16px; padding:16px; text-align:left; border:none; cursor:pointer; font-family:inherit;}
   .actionbtn.red{background:var(--red); color:#fff;}
   .actionbtn.white{background:#fff; border:1px solid var(--line); color:var(--accent);}
@@ -120,7 +120,7 @@
   .rowbody{flex:1; min-width:0;}
   .medname{font-weight:600; font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
   .meddose{font-size:12px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-  .statuspill{display:inline-flex; align-items:center; gap:3px; font-size:11px; font-weight:600; margin-top:3px; padding:2px 8px; border-radius:999px;}
+  .statuspill{display:inline-flex; align-items:center; gap:3px; font-size:11.5px; font-weight:600; margin-top:3px; padding:2px 8px; border-radius:999px;}
   .statuspill.taken{background:var(--green2-light); color:var(--green2);}
   .statuspill.missed{background:var(--red-light); color:var(--red);}
   .lognote{font-size:14px; line-height:1.4;}
@@ -142,6 +142,16 @@
   .field input, .field textarea{width:100%; background:#FAFBFB; border:1px solid var(--line); border-radius:12px; padding:12px 14px; font-size:15px; color:var(--text); font-family:inherit;}
   .field input:focus, .field textarea:focus{outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(61,92,88,.12);}
   .field textarea{resize:none;}
+  .bigbtn{width:100%; background:var(--accent); color:#fff; border:none; border-radius:12px; padding:13px; font-size:15px; font-weight:700; font-family:inherit; cursor:pointer;}
+  .bigbtn:active{transform:scale(.98);}
+  .linkbtn{background:none; border:none; font-size:13px; font-family:inherit; cursor:pointer; padding:6px 2px; color:var(--accent-soft);}
+  .linkbtn.danger{color:var(--red);}
+  .gdrive-status{font-size:13px; line-height:1.5; background:var(--bg); border-radius:12px; padding:12px 14px;}
+  .gdrive-help{margin-top:14px; font-size:12.5px; color:var(--muted);}
+  .gdrive-help summary{cursor:pointer; font-weight:600; color:var(--accent-soft); padding:6px 0;}
+  .gdrive-help ol{margin:8px 0 0; padding-left:20px; line-height:1.7;}
+  .gdrive-help li{margin-bottom:4px;}
+  .gdrive-help b{color:var(--text); word-break:break-all;}
   .errortext{color:var(--red); font-size:12px; margin-top:6px;}
   .formbtns{display:flex; gap:12px; margin-top:24px;}
   .formbtns button{flex:1; padding:13px; border-radius:12px; font-size:15px; font-weight:500; cursor:pointer; font-family:inherit; border:none;}
@@ -213,15 +223,15 @@
   .hcal{border:1px solid var(--line); border-radius:14px; padding:10px; background:#fff;}
   .hcal-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;}
   .hcal-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:3px;}
-  .hcal-dow{text-align:center; font-size:10px; color:var(--muted); font-weight:600; padding-bottom:2px;}
+  .hcal-dow{text-align:center; font-size:11px; color:var(--muted); font-weight:600; padding-bottom:2px;}
   .hcal-cell{position:relative; aspect-ratio:1; border:none; background:var(--bg); border-radius:8px; cursor:pointer; font-family:inherit; padding:0;}
   .hcal-cell.empty{visibility:hidden; pointer-events:none;}
   .hcal-cell.today{box-shadow:inset 0 0 0 1.5px var(--accent-soft);}
   .hcal-cell.sel{outline:2px solid var(--accent); outline-offset:1px;}
-  .hcal-num{position:absolute; top:2px; left:4px; font-size:10px; color:var(--muted2);}
-  .hcal-dot{position:absolute; right:3px; bottom:3px; min-width:8px; height:8px; padding:0 2px; border-radius:5px; font-size:8px; font-weight:800; color:#fff; display:flex; align-items:center; justify-content:center; line-height:1;}
-  .hcal-emoji{position:absolute; left:0; right:0; bottom:3px; text-align:center; font-size:14px; line-height:1;}
-  .hcal-badge{position:absolute; left:50%; bottom:3px; transform:translateX(-50%); font-size:8.5px; font-weight:800; color:#fff; border-radius:6px; padding:1px 4px; line-height:1.25; white-space:nowrap;}
+  .hcal-num{position:absolute; top:2px; left:4px; font-size:11px; color:var(--muted); font-weight:500;}
+  .hcal-dot{position:absolute; right:3px; bottom:3px; min-width:9px; height:9px; padding:0 2px; border-radius:5px; font-size:9px; font-weight:800; color:#fff; display:flex; align-items:center; justify-content:center; line-height:1;}
+  .hcal-emoji{position:absolute; left:0; right:0; bottom:3px; text-align:center; font-size:15px; line-height:1;}
+  .hcal-badge{position:absolute; left:50%; bottom:3px; transform:translateX(-50%); font-size:9.5px; font-weight:800; color:#fff; border-radius:6px; padding:1px 4px; line-height:1.25; white-space:nowrap;}
   .hcal-detail{margin-top:12px;}
   .hcal-hint{font-size:12.5px; color:var(--muted); text-align:center; padding:16px 0;}
   .hcal-detail-date{font-size:12.5px; font-weight:700; color:var(--text); margin:2px 2px 8px;}
@@ -339,6 +349,9 @@
   .emerg-steps li{position:relative; padding:8px 0 8px 34px; font-size:14px; line-height:1.45; border-bottom:1px solid var(--line);}
   .emerg-steps li:last-child{border-bottom:none;}
   .emerg-steps li::before{counter-increment:estep; content:counter(estep); position:absolute; left:0; top:7px; width:24px; height:24px; border-radius:50%; background:var(--accent-light); color:var(--accent); font-size:12px; font-weight:800; display:flex; align-items:center; justify-content:center;}
+  .emerg-disclaimer{font-size:11.5px; color:var(--muted); line-height:1.5; padding:14px 4px 4px; text-align:center;}
+  .settingsnote{font-size:12.5px; color:var(--muted); line-height:1.6; background:var(--bg); border-radius:12px; padding:12px 14px; margin-top:8px;}
+  .settingsnote b{color:var(--text);}
   .emerg-warn{background:var(--red-light); border:1px solid #F3C9C4; border-radius:12px; padding:12px 14px; margin-top:12px; font-size:13.5px; line-height:1.5; color:#8A3D36;}
   .emerg-warn b{color:var(--red);}
   .emerg-info-row{display:flex; justify-content:space-between; gap:12px; padding:9px 0; border-bottom:1px solid var(--line); font-size:14px;}
@@ -699,6 +712,7 @@
         </div>
         <button class="addbtn" onclick="requestNotifPermission()">Зөвшөөрөх</button>
       </div>
+      <div class="settingsnote">⚠️ Сануулга зөвхөн <b>апп нээлттэй үед</b> ажиллана. Апп хаалттай үед цагтаа дуугардаг сэрүүлэг хэрэгтэй бол Сануулга хуудасны <b>"📅 Хуанли/сэрүүлэгт нэмэх"</b> товчоор эмийн хуваарийг утасныхаа Календарь аппд оруулаарай.</div>
 
       <div class="sectionrow" style="margin-top:24px;">
         <h3 class="sectiontitle">🚨 Яаралтай тусламж</h3>
@@ -721,6 +735,7 @@
       <div class="sectionrow" style="margin-top:24px;">
         <h3 class="sectiontitle">Нөөц хуулбар (Backup)</h3>
       </div>
+      <div class="gdrive-status" id="persistStatus" style="margin-bottom:8px;">—</div>
       <div class="settingsrow">
         <div>
           <div class="settingslabel">Нөөцлөх сануулга</div>
@@ -746,6 +761,48 @@
         </div>
         <button class="addbtn" onclick="document.getElementById('restoreFileInput').click()">Сэргээх</button>
         <input type="file" id="restoreFileInput" accept="application/json,.json" class="hidden" onchange="importBackup(event)">
+      </div>
+
+      <div class="sectionrow" style="margin-top:24px;">
+        <h3 class="sectiontitle">Google Drive синк ☁️</h3>
+      </div>
+      <p class="hint" style="margin:0 2px 10px;">Google-ээр нэвтэрч холбоно. Дараа нь мэдээлэл өөрчлөгдөх бүрд Drive рүү автоматаар хадгалагдаж, шинэ утаснаас нэвтрэхэд бүгд сэргэнэ.</p>
+      <div class="gdrive-status" id="gdriveStatus">—</div>
+      <div class="field" style="margin-top:10px;">
+        <label class="fieldlabel">Google Client ID</label>
+        <input type="text" id="gdriveClientId" class="textinput" placeholder="...apps.googleusercontent.com" autocomplete="off" onblur="saveGDriveClientId()">
+        <div class="settingssub" style="margin-top:4px;">Доорх зааврын дагуу нэг удаа авна.</div>
+      </div>
+      <button class="bigbtn" id="gdriveConnectBtn" onclick="gdriveConnect()" style="margin-top:8px;">Google Drive-тэй холбох</button>
+      <div id="gdriveConnectedBox" class="hidden">
+        <div class="settingsrow">
+          <div class="settingslabel">Авто-синк</div>
+          <button class="toggle" id="gdriveAutoToggle" onclick="toggleGDriveAuto()"><span class="knob"></span></button>
+        </div>
+        <div class="btnrow" style="display:flex; gap:8px; margin-top:8px;">
+          <button class="addbtn" style="flex:1;" onclick="gdriveSaveNow()">Одоо хадгалах</button>
+          <button class="addbtn" style="flex:1;" onclick="gdriveRestoreNow()">Drive-аас сэргээх</button>
+        </div>
+        <button class="linkbtn danger" style="margin-top:10px;" onclick="gdriveDisconnect()">Салгах</button>
+      </div>
+      <details class="gdrive-help">
+        <summary>Client ID хэрхэн авах вэ? (нэг удаа)</summary>
+        <ol>
+          <li>console.cloud.google.com руу орж, Google-ээрээ нэвтэр.</li>
+          <li>Дээд талаас шинэ төсөл (Project) үүсгэ — нэр: "Em Unalt".</li>
+          <li>"APIs &amp; Services → Library" → "Google Drive API"-г ол → Enable.</li>
+          <li>"APIs &amp; Services → OAuth consent screen" → External → өөрийн нэр/имэйл бөглө → Test users дотор өөрийн Gmail-ээ нэм.</li>
+          <li>"APIs &amp; Services → Credentials → Create credentials → OAuth client ID" → Application type: <b>Web application</b>.</li>
+          <li>"Authorized JavaScript origins" дотор нэм: <b>https://zegiijagii11-alt.github.io</b></li>
+          <li>Create дарж гарсан <b>Client ID</b>-г хуулж, дээрх нүдэнд буулгана.</li>
+          <li>Дараа нь "Google Drive-тэй холбох" дарж нэвтэрнэ.</li>
+        </ol>
+      </details>
+    </div>
+
+      <div class="settingsnote" style="margin-top:24px;">
+        <b>Эм & Уналт</b> — эпилепситэй хүнд зориулсан хувийн хянах дэвтэр. Таны мэдээлэл зөвхөн энэ төхөөрөмжид хадгалагдана.<br><br>
+        Энэ апп нь <b>эмчийн оношилгоо, эмчилгээ, зөвлөгөөг орлохгүй</b>. Эм, тунгаа өөрчлөх, шинэ шинж тэмдэг илэрвэл заавал эмчтэйгээ зөвлөлдөөрэй. Яаралтай үед 103.
       </div>
     </div>
 
@@ -897,7 +954,51 @@ function formatMnDate(dateStr){
   return `${y} оны ${months[parseInt(m,10)-1]} ${parseInt(d,10)}`;
 }
 function loadJSON(key, fallback){ try{ const v = JSON.parse(localStorage.getItem(key)); return v===null||v===undefined ? fallback : v; }catch(e){ return fallback; } }
-function saveJSON(key, val){ localStorage.setItem(key, JSON.stringify(val)); }
+function saveJSON(key, val){ localStorage.setItem(key, JSON.stringify(val)); if(typeof onDataChanged==='function') onDataChanged(key); }
+
+const GDRIVE_KEY = "epilepsy_gdrive_v2";
+function loadGDrive(){ return loadJSON(GDRIVE_KEY, { clientId:"", fileId:null, autoSync:false, lastSyncAt:null, email:"" }); }
+function saveGDriveCfg(v){ localStorage.setItem(GDRIVE_KEY, JSON.stringify(v)); }
+function onDataChanged(key){
+  // Auto-sync data changes up to Google Drive (debounced)
+  const DATA_KEYS = ["epilepsy_meds_v2","epilepsy_logs_v2","epilepsy_taken_v2","epilepsy_settings_v2","epilepsy_profile_v2","epilepsy_daily_v2","epilepsy_emergency_v2"];
+  if(DATA_KEYS.indexOf(key)>=0) scheduleGDrivePush();
+}
+
+// Safe schema-version guard so future updates don't corrupt existing data
+const DATA_VERSION = 2;
+const DATA_VERSION_KEY = "epilepsy_dataver";
+function runMigrations(){
+  try{
+    let v = parseInt(localStorage.getItem(DATA_VERSION_KEY) || '0', 10);
+    if(isNaN(v)) v = 0;
+    // Future migrations go here, e.g.:
+    // if(v < 3){ /* transform data from v2 -> v3 */ v = 3; }
+    if(v !== DATA_VERSION) localStorage.setItem(DATA_VERSION_KEY, String(DATA_VERSION));
+  }catch(e){ /* ignore */ }
+}
+
+// Ask the browser to keep this app's data and not auto-delete it
+let persistentGranted = null;async function requestPersistentStorage(){
+  try{
+    if(navigator.storage && navigator.storage.persist){
+      if(navigator.storage.persisted){
+        persistentGranted = await navigator.storage.persisted();
+      }
+      if(!persistentGranted){
+        persistentGranted = await navigator.storage.persist();
+      }
+    }
+  }catch(e){ persistentGranted = null; }
+  if(typeof renderPersistStatus==='function') renderPersistStatus();
+}
+function renderPersistStatus(){
+  const el = document.getElementById('persistStatus');
+  if(!el) return;
+  if(persistentGranted===true) el.textContent = '✓ Хамгаалагдсан — хөтөч энэ аппын мэдээллийг автоматаар устгахгүй';
+  else if(persistentGranted===false) el.textContent = 'Хөтөч баталгаа өгөөгүй. Аппыг "суулгасан" бол ихэвчлэн хамгаалагдана.';
+  else el.textContent = 'Энэ хөтөч дээр тодорхойгүй.';
+}
 
 function loadMeds(){ return loadJSON(MED_KEY, []); }
 function saveMeds(v){ saveJSON(MED_KEY, v); }
@@ -1051,6 +1152,226 @@ function buildBackupObject(){
     if(v!==null) data[k] = v;
   });
   return { app: "epilepsy-tracker", exportedAt: new Date().toISOString(), data };
+}
+
+// ============ Google Drive sync ============
+const GDRIVE_FILE = "em-unalt-backup.json";
+const GDRIVE_SCOPE = "https://www.googleapis.com/auth/drive.file email profile";
+let gisLoaded = false, gdriveTokenClient = null, gdriveToken = null, gdriveTokenExp = 0, gdrivePushTimer = null;
+
+function loadGis(){
+  return new Promise((resolve, reject)=>{
+    if(gisLoaded && window.google && google.accounts) return resolve();
+    const s = document.createElement('script');
+    s.src = 'https://accounts.google.com/gsi/client'; s.async = true; s.defer = true;
+    s.onload = ()=>{ gisLoaded = true; resolve(); };
+    s.onerror = ()=> reject(new Error('gis-load-failed'));
+    document.head.appendChild(s);
+  });
+}
+
+function gdriveGetToken(interactive){
+  return new Promise(async (resolve, reject)=>{
+    const cfg = loadGDrive();
+    if(!cfg.clientId){ reject(new Error('no-client-id')); return; }
+    try{ await loadGis(); }catch(e){ reject(e); return; }
+    if(gdriveToken && Date.now() < gdriveTokenExp - 60000){ resolve(gdriveToken); return; }
+    try{
+      gdriveTokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: cfg.clientId,
+        scope: GDRIVE_SCOPE,
+        callback: (resp)=>{
+          if(resp && resp.access_token){
+            gdriveToken = resp.access_token;
+            gdriveTokenExp = Date.now() + ((resp.expires_in||3600)*1000);
+            resolve(gdriveToken);
+          } else { reject(resp || new Error('no-token')); }
+        },
+        error_callback: (err)=> reject(err)
+      });
+      gdriveTokenClient.requestAccessToken({ prompt: interactive ? 'consent' : '' });
+    }catch(e){ reject(e); }
+  });
+}
+
+async function gdriveGetEmail(token){
+  try{
+    const r = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', { headers:{ Authorization:'Bearer '+token } });
+    const j = await r.json(); return j.email || '';
+  }catch(e){ return ''; }
+}
+
+async function gdriveFindFile(token){
+  const q = encodeURIComponent("name='"+GDRIVE_FILE+"' and trashed=false");
+  const r = await fetch('https://www.googleapis.com/drive/v3/files?spaces=drive&fields=files(id,modifiedTime)&q='+q, { headers:{ Authorization:'Bearer '+token } });
+  const j = await r.json();
+  return (j.files && j.files[0]) || null;
+}
+async function gdriveCreateFile(token, content){
+  const boundary = '----em'+Date.now();
+  const meta = { name: GDRIVE_FILE, mimeType:'application/json' };
+  const body = '--'+boundary+'\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n'+JSON.stringify(meta)+
+    '\r\n--'+boundary+'\r\nContent-Type: application/json\r\n\r\n'+content+'\r\n--'+boundary+'--';
+  const r = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id', {
+    method:'POST', headers:{ Authorization:'Bearer '+token, 'Content-Type':'multipart/related; boundary='+boundary }, body
+  });
+  const j = await r.json(); return j.id;
+}
+async function gdriveUpdateFile(token, fileId, content){
+  await fetch('https://www.googleapis.com/upload/drive/v3/files/'+fileId+'?uploadType=media', {
+    method:'PATCH', headers:{ Authorization:'Bearer '+token, 'Content-Type':'application/json' }, body: content
+  });
+}
+async function gdriveDownload(token, fileId){
+  const r = await fetch('https://www.googleapis.com/drive/v3/files/'+fileId+'?alt=media', { headers:{ Authorization:'Bearer '+token } });
+  return await r.text();
+}
+function gdriveRestoreFrom(content){
+  const parsed = JSON.parse(content);
+  if(!parsed || !parsed.data) throw new Error('invalid');
+  BACKUP_KEYS.forEach(k=>{
+    if(parsed.data[k]!==undefined) localStorage.setItem(k, parsed.data[k]);
+    else localStorage.removeItem(k);
+  });
+}
+
+async function gdriveConnect(){
+  try{
+    showToast('Google-д холбогдож байна…');
+    const token = await gdriveGetToken(true);
+    const cfg = loadGDrive();
+    cfg.email = await gdriveGetEmail(token);
+    const file = await gdriveFindFile(token);
+    if(file){
+      cfg.fileId = file.id; cfg.autoSync = true; saveGDriveCfg(cfg);
+      if(confirm('Google Drive дээр хадгалсан мэдээлэл олдлоо.\n\nТатаж сэргээх үү? (Энэ төхөөрөмж дээрх одоогийн мэдээлэл орлуулагдана)')){
+        const content = await gdriveDownload(token, file.id);
+        gdriveRestoreFrom(content);
+        cfg.lastSyncAt = new Date().toISOString(); saveGDriveCfg(cfg);
+        showToast('Drive-аас сэргээгдлээ'); setTimeout(()=> location.reload(), 1200); return;
+      }
+    } else {
+      const id = await gdriveCreateFile(token, JSON.stringify(buildBackupObject()));
+      cfg.fileId = id; cfg.autoSync = true; cfg.lastSyncAt = new Date().toISOString(); saveGDriveCfg(cfg);
+      showToast('Google Drive-тэй холбогдож, хадгаллаа');
+    }
+    renderGDriveSettings();
+  }catch(e){
+    if(e && e.message==='no-client-id') showToast('Эхлээд Client ID оруулна уу', true);
+    else showToast('Холбоход алдаа гарлаа. Client ID болон зөвшөөрлийг шалгана уу.', true);
+  }
+}
+
+async function gdriveSaveNow(){
+  try{
+    showToast('Хадгалж байна…');
+    const token = await gdriveGetToken(true);
+    const cfg = loadGDrive();
+    const content = JSON.stringify(buildBackupObject());
+    if(cfg.fileId) await gdriveUpdateFile(token, cfg.fileId, content);
+    else cfg.fileId = await gdriveCreateFile(token, content);
+    cfg.lastSyncAt = new Date().toISOString(); saveGDriveCfg(cfg);
+    showToast('Google Drive-д хадгаллаа'); renderGDriveSettings();
+  }catch(e){ showToast('Хадгалахад алдаа гарлаа', true); }
+}
+
+async function gdriveRestoreNow(){
+  try{
+    const token = await gdriveGetToken(true);
+    const cfg = loadGDrive();
+    let fileId = cfg.fileId;
+    if(!fileId){ const f = await gdriveFindFile(token); if(f) fileId = f.id; }
+    if(!fileId){ showToast('Drive дээр нөөц олдсонгүй', true); return; }
+    if(!confirm('Google Drive-аас мэдээллийг татаж сэргээх үү? Одоогийн мэдээлэл орлуулагдана.')) return;
+    const content = await gdriveDownload(token, fileId);
+    gdriveRestoreFrom(content);
+    cfg.fileId = fileId; cfg.lastSyncAt = new Date().toISOString(); saveGDriveCfg(cfg);
+    showToast('Сэргээгдлээ'); setTimeout(()=> location.reload(), 1200);
+  }catch(e){ showToast('Сэргээхэд алдаа гарлаа', true); }
+}
+
+function scheduleGDrivePush(){
+  const cfg = loadGDrive();
+  if(!cfg.clientId || !cfg.autoSync || !cfg.fileId) return;
+  clearTimeout(gdrivePushTimer);
+  gdrivePushTimer = setTimeout(gdrivePushNow, 2500);
+}
+async function gdrivePushNow(){
+  const cfg = loadGDrive();
+  if(!cfg.fileId || !cfg.autoSync) return;
+  try{
+    const token = await gdriveGetToken(false);
+    await gdriveUpdateFile(token, cfg.fileId, JSON.stringify(buildBackupObject()));
+    cfg.lastSyncAt = new Date().toISOString(); saveGDriveCfg(cfg);
+    renderGDriveSettings();
+  }catch(e){ /* offline or token expired; retries on next change */ }
+}
+
+async function gdriveAutoSyncOnLoad(){
+  const cfg = loadGDrive();
+  if(!cfg.clientId || !cfg.autoSync) return;
+  try{
+    const token = await gdriveGetToken(false);
+    const file = await gdriveFindFile(token);
+    if(!file) return;
+    if(!cfg.fileId){ cfg.fileId = file.id; saveGDriveCfg(cfg); }
+    const remoteTime = new Date(file.modifiedTime).getTime();
+    const localTime = cfg.lastSyncAt ? new Date(cfg.lastSyncAt).getTime() : 0;
+    if(remoteTime > localTime + 2000){
+      const content = await gdriveDownload(token, file.id);
+      gdriveRestoreFrom(content);
+      cfg.lastSyncAt = new Date().toISOString(); saveGDriveCfg(cfg);
+      location.reload();
+    }
+  }catch(e){ /* silent best-effort */ }
+}
+
+function gdriveDisconnect(){
+  const cfg = loadGDrive();
+  if(gdriveToken && window.google && google.accounts){ try{ google.accounts.oauth2.revoke(gdriveToken, ()=>{}); }catch(e){} }
+  gdriveToken = null; gdriveTokenExp = 0;
+  saveGDriveCfg({ clientId: cfg.clientId, fileId:null, autoSync:false, lastSyncAt:null, email:"" });
+  renderGDriveSettings();
+  showToast('Салгагдлаа');
+}
+
+function saveGDriveClientId(){
+  const inp = document.getElementById('gdriveClientId');
+  const cfg = loadGDrive();
+  cfg.clientId = (inp.value||'').trim();
+  saveGDriveCfg(cfg);
+  showToast(cfg.clientId ? 'Client ID хадгалагдлаа' : 'Client ID цэвэрлэгдлээ');
+  renderGDriveSettings();
+}
+function toggleGDriveAuto(){
+  const cfg = loadGDrive();
+  cfg.autoSync = !cfg.autoSync; saveGDriveCfg(cfg);
+  renderGDriveSettings();
+  if(cfg.autoSync) gdrivePushNow();
+}
+
+function renderGDriveSettings(){
+  const cfg = loadGDrive();
+  const connected = !!(cfg.clientId && cfg.fileId);
+  const statusEl = document.getElementById('gdriveStatus');
+  const inp = document.getElementById('gdriveClientId');
+  if(inp && document.activeElement!==inp) inp.value = cfg.clientId || '';
+  if(statusEl){
+    if(connected){
+      const last = cfg.lastSyncAt ? formatMnDate(dateKey(new Date(cfg.lastSyncAt))) : '—';
+      statusEl.innerHTML = `<span style="color:var(--green2); font-weight:700;">✓ Холбогдсон</span>${cfg.email?' · '+escapeHtml(cfg.email):''}<br><span style="color:var(--muted);">Сүүлд синк: ${last}</span>`;
+    } else if(cfg.clientId){
+      statusEl.innerHTML = `<span style="color:var(--muted);">Client ID бэлэн. "Холбох" дарж нэвтэрнэ үү.</span>`;
+    } else {
+      statusEl.innerHTML = `<span style="color:var(--muted);">Холбогдоогүй. Доорх зааврыг дагаж Client ID авна уу.</span>`;
+    }
+  }
+  const connectBtn = document.getElementById('gdriveConnectBtn');
+  const connectedBox = document.getElementById('gdriveConnectedBox');
+  if(connectBtn) connectBtn.classList.toggle('hidden', connected);
+  if(connectedBox) connectedBox.classList.toggle('hidden', !connected);
+  const at = document.getElementById('gdriveAutoToggle');
+  if(at) at.classList.toggle('on', !!cfg.autoSync);
 }
 
 async function exportBackup(){
@@ -1275,6 +1596,7 @@ function afterUnlock(){
   renderHome();
   renderProfileCard();
   checkReminders();
+  gdriveAutoSyncOnLoad();
   if(!loadProfile()){
     openProfileForm(true);
   }
@@ -2236,7 +2558,60 @@ function seizuresMonthsSpan(logs){
   return Math.max(1, (now-first)/(1000*60*60*24*30));
 }
 
-function printReport(){ window.print(); }
+function printReport(){
+  const content = document.getElementById('reportContent');
+  if(!content || !content.innerHTML.trim()){ showToast('Тайлан хоосон байна', true); return; }
+
+  const css = `
+    :root{ --accent:#3D5C58; --accent-soft:#5B7D7A; --red:#C9594F; --green2:#3E8E5A; --bg:#F4F7F6; --line:#E1E8E6; --text:#1F2D2B; --muted:#677876; }
+    *{ box-sizing:border-box; }
+    body{ font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif; color:#1F2D2B; margin:0; padding:16px; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .rep{ border:1px solid #E1E8E6; border-radius:14px; padding:16px; margin-top:14px; page-break-inside:avoid; }
+    .rep:first-child{ margin-top:0; }
+    .rep h2{ font-size:18px; margin:0 0 2px; }
+    .rep .repmeta{ font-size:12px; color:#677876; margin-bottom:2px; }
+    .rep h3{ font-size:14px; margin:0 0 10px; padding-bottom:6px; border-bottom:1px solid #E1E8E6; }
+    .rep-grid{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
+    .rep-stat{ background:#F4F7F6; border:1px solid #E1E8E6; border-radius:10px; padding:10px; text-align:center; }
+    .rep-stat .n{ font-size:20px; font-weight:800; color:#1F2D2B; }
+    .rep-stat .l{ font-size:10.5px; color:#677876; margin-top:3px; }
+    .rep-row{ font-size:13px; padding:7px 0; border-bottom:1px solid #E1E8E6; line-height:1.4; }
+    .rep-row:last-child{ border-bottom:none; }
+    .rep-row .rd{ font-weight:700; }
+    .rep-row .rt{ color:#677876; font-size:11.5px; margin-top:2px; }
+    @page{ margin:12mm; }
+  `;
+  const html = '<!DOCTYPE html><html lang="mn"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Эмчийн тайлан</title><style>'+css+'</style></head><body>'+content.innerHTML+'<script>
+if ('serviceWorker' in navigator) { window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); }); }
+</script>
+</body></html>';
+
+  // Print via a hidden iframe — reliable on mobile and inside installed PWA
+  const old = document.getElementById('printFrame');
+  if(old) old.remove();
+  const ifr = document.createElement('iframe');
+  ifr.id = 'printFrame';
+  ifr.setAttribute('aria-hidden', 'true');
+  ifr.style.cssText = 'position:fixed; right:0; bottom:0; width:1px; height:1px; border:0; opacity:0; pointer-events:none;';
+  document.body.appendChild(ifr);
+
+  let printed = false;
+  const doPrint = ()=>{
+    if(printed) return; printed = true;
+    try{
+      ifr.contentWindow.focus();
+      ifr.contentWindow.print();
+    }catch(e){
+      try{ window.print(); }catch(e2){ showToast('Хэвлэх боломжгүй байна', true); }
+    }
+    setTimeout(()=>{ try{ ifr.remove(); }catch(e){} }, 60000);
+  };
+
+  const doc = ifr.contentWindow.document;
+  doc.open(); doc.write(html); doc.close();
+  ifr.onload = ()=> setTimeout(doPrint, 350);
+  setTimeout(doPrint, 900); // safety fallback if onload doesn't fire
+}
 
 function renderHistory(){
   ['seizure','med','mood'].forEach(k=>{
@@ -2569,6 +2944,8 @@ function renderSettings(){
   document.getElementById('repeatToggle').classList.toggle('on', s.repeatReminders);
   renderLockSettings();
   renderBackupSettings();
+  renderPersistStatus();
+  renderGDriveSettings();
   updateNotifPermLabel();
 }
 
@@ -2631,16 +3008,16 @@ function renderEmergency(){
     <div class="emerg-section">
       <h3>⚡ Таталтын үед юу хийх вэ</h3>
       <ol class="emerg-steps">
-        <li>Тайван байж, <b>цаг тэмдэглэ</b> — хэр удаан үргэлжилж байгааг хар.</li>
-        <li>Толгойг нь зөөлөн зүйлээр хамгаалж, хурц/хатуу зүйлсийг зайлуул.</li>
-        <li>Боломжтой бол <b>хажуу тийш нь хэвтүүл</b> (амьсгалын зам чөлөөтэй байх).</li>
+        <li>Тайван байж, <b>эхэлсэн цагийг тэмдэглэ</b> — хэр удаан үргэлжлэхийг хар.</li>
+        <li>Толгойг нь зөөлөн зүйлээр дэрлүүлж, ойролцоох <b>хурц/хатуу зүйлсийг зайлуул</b>.</li>
         <li>Хүзүү, хувцасны товчийг сулла.</li>
         <li>Хөдөлгөөнийг нь хүчээр <b>барьж болохгүй</b>.</li>
         <li>Аманд нь юу ч <b>хийж болохгүй</b> (хоол, ус, эм, гар).</li>
-        <li>Дуустал нь хажууд байж, тайвшир. Дараа нь зөөлөн ярьж сэргээ.</li>
+        <li>Татдаг нь зогсмогц <b>хажуу тийш нь эргүүлж хэвтүүл</b> (амьсгалын зам чөлөөтэй, шүлс/бөөлжис гарах боломжтой байх).</li>
+        <li>Сэрэх хүртэл нь <b>хажууд байж</b>, тайвшруулан юу болсныг зөөлөн тайлбарла.</li>
       </ol>
       <div class="emerg-warn">
-        <b>Яаралтай 103 руу залга:</b> таталт <b>5 минутаас удвал</b>, дараалан давтагдвал, амьсгал саатвал, ус усанд/гэмтсэн бол, эсвэл <b>анх удаа</b> таталт өгсөн бол.
+        <b>Яаралтай 103 руу залга:</b> таталт <b>5 минутаас удвал</b>, дараалан давтагдвал, амьсгал саатвал, усанд орсон/гэмтсэн бол, жирэмсэн бол, эсвэл <b>анх удаа</b> таталт өгсөн бол.
       </div>
     </div>`;
 
@@ -2673,6 +3050,8 @@ function renderEmergency(){
   if(!e.contactPhone && !e.doctorPhone && !e.allergies && !e.bloodType){
     html += `<div class="emerg-empty">💡 Тохиргоо → "Яаралтай мэдээлэл" хэсэгт холбоо барих хүн, харшил, эмчийн мэдээллээ бөглөвөл энд харагдана.</div>`;
   }
+
+  html += `<div class="emerg-disclaimer">Энэ мэдээлэл нь ерөнхий зөвлөмж бөгөөд эмнэлгийн тусламжийг орлохгүй. Эргэлзвэл заавал 103 руу залгаж, эмчийн зааврыг дагаарай.</div>`;
 
   document.getElementById('emergencyBody').innerHTML = html;
 }
@@ -2758,7 +3137,9 @@ function scheduleReminders(){
 }
 
 // init
+runMigrations();
 applyTheme();
+requestPersistentStorage();
 renderHome();
 setInterval(checkReminders, 30*1000); // re-check every 30s while app open
 
@@ -2767,9 +3148,6 @@ if(isLockEnabled()){
 } else {
   afterUnlock();
 }
-</script>
-<script>
-if ('serviceWorker' in navigator) { window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); }); }
 </script>
 </body>
 </html>
