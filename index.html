@@ -359,6 +359,23 @@
   .emerg-info-row .k{color:var(--muted); flex-shrink:0;}
   .emerg-info-row .v{color:var(--text); font-weight:600; text-align:right; word-break:break-word;}
   .emerg-empty{font-size:13px; color:var(--muted); padding:6px 0;}
+  #authScreen{position:fixed; inset:0; background:var(--accent); z-index:2500; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:32px 20px; text-align:center; overflow-y:auto;}
+  #authScreen.hidden{display:none !important;}
+  .auth-form{width:100%; max-width:320px; display:flex; flex-direction:column; align-items:stretch; gap:10px;}
+  .auth-google{display:flex; align-items:center; justify-content:center; gap:10px; background:#fff; color:#1F2D2B; border:none; border-radius:999px; padding:13px; font-size:15px; font-weight:700; font-family:inherit; cursor:pointer;}
+  .auth-google:active{transform:scale(.97);}
+  .auth-g{width:20px; height:20px; border-radius:50%; background:conic-gradient(#EA4335 0 25%, #FBBC05 0 50%, #34A853 0 75%, #4285F4 0); position:relative;}
+  .auth-g::after{content:''; position:absolute; inset:4px; background:#fff; border-radius:50%;}
+  .auth-or{color:rgba(255,255,255,.7); font-size:12.5px; margin:6px 0 2px;}
+  .auth-input{width:100%; font-size:15px; padding:13px 14px; border-radius:12px; border:none; outline:none; background:rgba(255,255,255,.15); color:#fff; font-family:inherit;}
+  .auth-input::placeholder{color:rgba(255,255,255,.55);}
+  .auth-msg{min-height:18px; font-size:13px; color:#FFD9D5;}
+  .auth-msg.ok{color:#D8F5E2;}
+  .auth-form .lockbtn{margin-top:0;}
+  .auth-links{display:flex; justify-content:space-between; gap:8px;}
+  .auth-links button, .auth-skip{background:none; border:none; color:rgba(255,255,255,.8); font-size:12.5px; text-decoration:underline; cursor:pointer; font-family:inherit; padding:6px 2px;}
+  .auth-skip{margin-top:6px; color:rgba(255,255,255,.6);}
+  .auth-emerg{position:static !important; transform:none !important; margin-top:28px;}
 </style>
 </head>
 <body>
@@ -385,6 +402,29 @@
     </button>
   </div>
   <div class="emerg-scroll" id="emergencyBody"></div>
+</div>
+
+<!-- SIGN-IN screen (Firebase) -->
+<div id="authScreen">
+  <div class="locklogo">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 20.5 3.5 13.5a5 5 0 0 1 7-7l7 7a5 5 0 0 1-7 7Z"/><path d="m8.5 8.5 7 7"/></svg>
+  </div>
+  <div class="locktitle">Эм & Уналт</div>
+  <div class="locksub" id="authSub">Ачаалж байна…</div>
+  <div class="auth-form hidden" id="authForm">
+    <button type="button" class="auth-google" onclick="fbGoogle()"><span class="auth-g"></span>Google-ээр нэвтрэх</button>
+    <div class="auth-or">эсвэл имэйлээр</div>
+    <input id="authEmail" class="auth-input" type="email" inputmode="email" placeholder="Имэйл" autocomplete="email">
+    <input id="authPass" class="auth-input" type="password" placeholder="Нууц үг (6+ тэмдэгт)" autocomplete="current-password">
+    <div id="authMsg" class="auth-msg"></div>
+    <button type="button" class="lockbtn" id="authSubmit" onclick="fbEmailSubmit()">Нэвтрэх</button>
+    <div class="auth-links">
+      <button type="button" id="authToggle" onclick="fbToggleMode()">Бүртгэл үүсгэх</button>
+      <button type="button" onclick="fbReset()">Нууц үг мартсан</button>
+    </div>
+    <button type="button" class="auth-skip" onclick="fbSkip()">Бүртгэлгүйгээр үргэлжлүүлэх</button>
+  </div>
+  <button class="lockemergency auth-emerg" onclick="openEmergency()">🚨 Яаралтай тусламж</button>
 </div>
 
 <div id="app">
@@ -508,9 +548,17 @@
       <div class="field" id="medRangeFields">
         <label>Эмчилгээний хугацаа</label>
         <div class="daterow">
-          <div class="datecol"><span>Эхлэх</span><input id="medStart" type="date"></div>
-          <div class="datecol"><span>Дуусах</span><input id="medEnd" type="date"></div>
+          <div class="datecol"><span>Эхлэх өдөр</span><input id="medStart" type="date" onchange="onMedRangeChange()"></div>
+          <div class="datecol"><span>Дуусах өдөр</span><input id="medEnd" type="date" onfocus="medEndTouched()" onchange="medEndTouched(); onMedRangeChange()"></div>
         </div>
+        <div class="chipgroup" style="margin-top:10px;">
+          <button type="button" class="chip" onclick="setMedDuration(7)">7 хоног</button>
+          <button type="button" class="chip" onclick="setMedDuration(14)">14 хоног</button>
+          <button type="button" class="chip" onclick="setMedDuration(30)">1 сар</button>
+          <button type="button" class="chip" onclick="setMedDuration(90)">3 сар</button>
+          <button type="button" class="chip" onclick="setMedDuration(180)">6 сар</button>
+        </div>
+        <div class="calcount" id="medRangeInfo" style="text-align:left; margin-top:8px;"></div>
         <label class="checkrow">
           <input type="checkbox" id="medNoEnd" onchange="toggleNoEnd()"> Дуусах хугацаагүй (тогтмол уух)
         </label>
@@ -670,6 +718,15 @@
 
     <!-- SETTINGS -->
     <div id="view-settings" class="hidden">
+      <div class="sectionrow" style="margin-top:4px;">
+        <h3 class="sectiontitle">Бүртгэл ☁️</h3>
+      </div>
+      <div class="gdrive-status" id="fbAccountStatus">—</div>
+      <div style="display:flex; gap:8px; align-items:center; margin:10px 0 8px;">
+        <button class="addbtn hidden" id="fbSyncBtn" onclick="fbSyncNow()">Одоо хадгалах</button>
+        <button class="addbtn hidden" id="fbLoginBtn" onclick="fbShowLogin()">Нэвтрэх</button>
+        <button class="linkbtn danger hidden" id="fbLogoutBtn" style="margin-left:auto;" onclick="fbLogout()">Гарах</button>
+      </div>
       <div class="settingsrow">
         <div>
           <div class="settingslabel">Хэрэглэгчийн мэдээлэл</div>
@@ -798,10 +855,9 @@
           <li>Дараа нь "Google Drive-тэй холбох" дарж нэвтэрнэ.</li>
         </ol>
       </details>
-    </div>
 
       <div class="settingsnote" style="margin-top:24px;">
-        <b>Эм & Уналт</b> — эпилепситэй хүнд зориулсан хувийн хянах дэвтэр. Таны мэдээлэл зөвхөн энэ төхөөрөмжид хадгалагдана.<br><br>
+        <b>Эм & Уналт</b> — эпилепситэй хүнд зориулсан хувийн хянах дэвтэр. Нэвтэрсэн бол мэдээлэл тань таны бүртгэлд (Firebase) хадгалагдаж, нэвтэрсэн бүх утсан дээр синк болно. Зөвхөн та өөрөө харах эрхтэй.<br><br>
         Энэ апп нь <b>эмчийн оношилгоо, эмчилгээ, зөвлөгөөг орлохгүй</b>. Эм, тунгаа өөрчлөх, шинэ шинж тэмдэг илэрвэл заавал эмчтэйгээ зөвлөлдөөрэй. Яаралтай үед 103.
       </div>
     </div>
@@ -962,7 +1018,7 @@ function saveGDriveCfg(v){ localStorage.setItem(GDRIVE_KEY, JSON.stringify(v)); 
 function onDataChanged(key){
   // Auto-sync data changes up to Google Drive (debounced)
   const DATA_KEYS = ["epilepsy_meds_v2","epilepsy_logs_v2","epilepsy_taken_v2","epilepsy_settings_v2","epilepsy_profile_v2","epilepsy_daily_v2","epilepsy_emergency_v2"];
-  if(DATA_KEYS.indexOf(key)>=0) scheduleGDrivePush();
+  if(DATA_KEYS.indexOf(key)>=0){ scheduleGDrivePush(); if(window.fbSchedulePush) window.fbSchedulePush(key); }
 }
 
 // Safe schema-version guard so future updates don't corrupt existing data
@@ -1784,7 +1840,8 @@ function openMedForm(med){
   const noEnd = !(med && med.endDate);
   document.getElementById('medNoEnd').checked = noEnd;
   document.getElementById('medEnd').value = (med && med.endDate) ? med.endDate : '';
-  document.getElementById('medEnd').disabled = noEnd;
+  document.getElementById('medEnd').style.opacity = noEnd ? '.5' : '';
+  onMedRangeChange();
 
   // calendar view month: first selected date, or start, or today
   let calBase = start;
@@ -1801,9 +1858,38 @@ function openMedForm(med){
 function toggleNoEnd(){
   const noEnd = document.getElementById('medNoEnd').checked;
   const endInput = document.getElementById('medEnd');
-  endInput.disabled = noEnd;
+  endInput.style.opacity = noEnd ? '.5' : '';
   if(noEnd) endInput.value = '';
   document.getElementById('medDateErr').classList.add('hidden');
+  onMedRangeChange();
+}
+// Дуусах өдөр дээр дармагц "хугацаагүй"-г автоматаар болиулна
+function medEndTouched(){
+  const cb = document.getElementById('medNoEnd');
+  if(cb.checked){ cb.checked = false; document.getElementById('medEnd').style.opacity = ''; }
+}
+// Хурдан сонголт: эхлэх өдрөөс N хоног
+function setMedDuration(days){
+  const startEl = document.getElementById('medStart');
+  if(!startEl.value) startEl.value = todayStr();
+  const d = new Date(startEl.value + 'T00:00:00');
+  d.setDate(d.getDate() + days - 1);
+  document.getElementById('medEnd').value = dateKey(d);
+  medEndTouched();
+  onMedRangeChange();
+}
+function onMedRangeChange(){
+  const info = document.getElementById('medRangeInfo');
+  if(!info) return;
+  const start = document.getElementById('medStart').value;
+  const end = document.getElementById('medEnd').value;
+  const noEnd = document.getElementById('medNoEnd').checked;
+  document.getElementById('medDateErr').classList.add('hidden');
+  if(!start){ info.textContent = ''; return; }
+  if(noEnd || !end){ info.textContent = formatMnDate(start) + '-аас эхлэн тогтмол'; return; }
+  if(end < start){ info.textContent = ''; document.getElementById('medDateErr').classList.remove('hidden'); return; }
+  const days = Math.round((new Date(end+'T00:00:00') - new Date(start+'T00:00:00'))/86400000) + 1;
+  info.textContent = `Нийт ${days} хоног · ${formatMnDate(end)} хүртэл`;
 }
 
 function setSchedMode(mode){
@@ -2944,6 +3030,7 @@ function renderSettings(){
   renderPersistStatus();
   renderGDriveSettings();
   updateNotifPermLabel();
+  if(window.fbRenderAccount) window.fbRenderAccount();
 }
 
 function selectTheme(i){
@@ -3145,6 +3232,277 @@ if(isLockEnabled()){
 } else {
   afterUnlock();
 }
+</script>
+<script type="module">
+// ================== Firebase: бүртгэл + үүлэн синк ==================
+const firebaseConfig = {
+  apiKey: "AIzaSyDPa2MvJTEPPdFqcfrxJ9HDyyqJMEuShr0",
+  authDomain: "epilyse--2026.firebaseapp.com",
+  projectId: "epilyse--2026",
+  storageBucket: "epilyse--2026.firebasestorage.app",
+  messagingSenderId: "1002632017161",
+  appId: "1:1002632017161:web:bf5b3aaac4835d63e68fd8"
+};
+const FB_SDK = "https://www.gstatic.com/firebasejs/10.12.2/";
+const FB_KEYS = BACKUP_KEYS;              // эм, уналт, өдрийн байдал, профайл, тохиргоо...
+const OWNER_KEY = "epilepsy_fb_owner";    // энэ утсан дээрх мэдээлэл хэний бүртгэлийнх вэ
+const DIRTY_KEY = "epilepsy_fb_dirty";    // үүлэнд хараахан хадгалагдаагүй өөрчлөлт байгаа эсэх
+const CLIENT_KEY = "epilepsy_fb_client";  // энэ төхөөрөмжийн ID
+
+const fb = {};
+let fbAuth = null, fbDb = null, fbUser = null, fbDocRef = null, fbUnsub = null;
+let fbPushTimer = null, fbInFlight = false, fbReconciled = false;
+let fbState = 'loading', fbLastSync = null, fbAvailable = false, fbSignUp = false;
+let fbClientId = localStorage.getItem(CLIENT_KEY);
+if(!fbClientId){ fbClientId = uid(); localStorage.setItem(CLIENT_KEY, fbClientId); }
+
+const $fb = (id)=> document.getElementById(id);
+function fbAuthScreen(show){ $fb('authScreen').classList.toggle('hidden', !show); }
+function fbShowForm(){
+  $fb('authSub').textContent = fbSignUp ? 'Шинэ бүртгэл үүсгэх' : 'Бүртгэлээрээ нэвтэрнэ үү';
+  $fb('authForm').classList.remove('hidden');
+}
+function fbMsg(text, ok){ const el = $fb('authMsg'); el.textContent = text || ''; el.classList.toggle('ok', !!ok); }
+
+function fbErr(e){
+  const map = {
+    'auth/invalid-email':'Имэйл буруу байна.',
+    'auth/missing-email':'Имэйлээ бичнэ үү.',
+    'auth/missing-password':'Нууц үгээ бичнэ үү.',
+    'auth/email-already-in-use':'Энэ имэйлээр бүртгэл үүссэн байна. "Нэвтрэх" рүү шилжинэ үү.',
+    'auth/weak-password':'Нууц үг хамгийн багадаа 6 тэмдэгттэй байна.',
+    'auth/invalid-credential':'Имэйл эсвэл нууц үг буруу байна.',
+    'auth/wrong-password':'Имэйл эсвэл нууц үг буруу байна.',
+    'auth/user-not-found':'Ийм бүртгэл олдсонгүй.',
+    'auth/too-many-requests':'Хэт олон оролдлого. Түр хүлээгээд дахин оролдоно уу.',
+    'auth/network-request-failed':'Интернэт холболтоо шалгана уу.',
+    'auth/popup-closed-by-user':'Google цонх хаагдлаа.',
+    'auth/unauthorized-domain':'Энэ хаяг Firebase-д зөвшөөрөгдөөгүй байна (Authorized domains).',
+    'permission-denied':'Хандах эрхгүй. Firestore Rules-ээ шалгана уу.'
+  };
+  return map[e && e.code] || ('Алдаа гарлаа: ' + ((e && e.message) || e));
+}
+
+// ---- localStorage <-> үүл ----
+function fbCollectLocal(){ const d = {}; FB_KEYS.forEach(k=>{ const v = localStorage.getItem(k); if(v!==null) d[k] = v; }); return d; }
+function fbLocalHasData(){ return FB_KEYS.some(k=> localStorage.getItem(k)!==null); }
+function fbApplyRemote(data){ FB_KEYS.forEach(k=>{ if(data && data[k]!==undefined) localStorage.setItem(k, data[k]); else localStorage.removeItem(k); }); }
+function fbClearLocal(){ FB_KEYS.forEach(k=> localStorage.removeItem(k)); }
+
+function fbRerender(){
+  try{
+    applyTheme();
+    if(currentView==='profile' && loadProfile()){ showView('home'); }
+    else if(['home','meds','history','correlation','report','settings'].includes(currentView)){ showView(currentView); }
+    else { renderProfileCard(); }
+    scheduleReminders();
+  }catch(e){}
+}
+
+function fbSetState(st){ fbState = st; if(st==='ok') fbLastSync = new Date(); fbRenderAccount(); }
+
+async function fbPushNow(){
+  if(!fbDocRef || !fbReconciled) return;
+  clearTimeout(fbPushTimer); fbPushTimer = null;
+  localStorage.removeItem(DIRTY_KEY);
+  fbInFlight = true; fbSetState('saving');
+  try{
+    await fb.setDoc(fbDocRef, { data: fbCollectLocal(), clientId: fbClientId, updatedAt: fb.serverTimestamp() });
+    fbInFlight = false; fbSetState('ok');
+  }catch(e){
+    fbInFlight = false; localStorage.setItem(DIRTY_KEY, '1'); fbSetState('error');
+  }
+}
+
+window.fbSchedulePush = function(key){
+  if(FB_KEYS.indexOf(key) < 0) return;
+  localStorage.setItem(DIRTY_KEY, '1');
+  if(!fbDocRef || !fbReconciled) return;   // нэвтрээгүй / анхны синк дуусаагүй: дараа нь хадгална
+  clearTimeout(fbPushTimer);
+  fbPushTimer = setTimeout(fbPushNow, 1200);
+};
+
+document.addEventListener('visibilitychange', ()=>{
+  if(document.visibilityState==='hidden' && fbPushTimer) fbPushNow();
+});
+
+// Анх нэвтэрсний дараа үүл болон утсан дээрх мэдээллийг нэгтгэх
+function fbReconcile(remote){
+  const owner = localStorage.getItem(OWNER_KEY);
+  const uidNow = fbUser.uid;
+  let needPush = false;
+  if(owner && owner !== uidNow){
+    // энэ утсан дээрх мэдээлэл өөр бүртгэлийнх — түүнийг цэвэрлэнэ
+    fbClearLocal(); localStorage.removeItem(DIRTY_KEY);
+    if(remote) fbApplyRemote(remote.data);
+  } else if(owner === uidNow){
+    if(localStorage.getItem(DIRTY_KEY) || !remote) needPush = true;
+    else fbApplyRemote(remote.data);
+  } else {
+    // энэ утсан дээр анх удаа нэвтэрч байна
+    if(remote && fbLocalHasData()){
+      const useCloud = confirm('Таны бүртгэлд өмнө хадгалсан мэдээлэл байна.\n\nOK — бүртгэлийн мэдээллийг ашиглах\nCancel — энэ утсан дээрх мэдээллийг ашиглаж, бүртгэлийнхийг солих');
+      if(useCloud) fbApplyRemote(remote.data); else needPush = true;
+    } else if(remote){
+      fbApplyRemote(remote.data);
+    } else {
+      needPush = true;   // одоо байгаа мэдээллийг бүртгэл рүү хуулна
+    }
+  }
+  localStorage.setItem(OWNER_KEY, uidNow);
+  fbReconciled = true;
+  fbRerender();
+  if(needPush) fbPushNow(); else fbSetState('ok');
+}
+
+function fbSubscribe(){
+  if(fbUnsub){ fbUnsub(); fbUnsub = null; }
+  fbUnsub = fb.onSnapshot(fbDocRef, { includeMetadataChanges: true }, (snap)=>{
+    const meta = snap.metadata;
+    if(!fbReconciled){
+      if(meta.fromCache) { fbSetState('waiting'); return; }   // серверээс ирэхийг хүлээнэ
+      fbReconcile(snap.exists() ? snap.data() : null);
+      return;
+    }
+    if(meta.hasPendingWrites) return;
+    const d = snap.exists() ? snap.data() : null;
+    if(!d) return;
+    if(d.clientId === fbClientId){ if(!meta.fromCache && !fbInFlight) fbSetState('ok'); return; }
+    if(fbPushTimer || localStorage.getItem(DIRTY_KEY)) return;   // энэ утсан дээрх шинэ өөрчлөлт давуу
+    fbApplyRemote(d.data);
+    fbRerender();
+    if(!meta.fromCache) fbSetState('ok');
+  }, (e)=>{ fbSetState('error'); if(e && e.code==='permission-denied') showToast(fbErr(e), true); });
+}
+
+function fbOnUser(u){
+  fbUser = u;
+  if(!u){
+    if(fbUnsub){ fbUnsub(); fbUnsub = null; }
+    fbDocRef = null; fbReconciled = false;
+    fbAuthScreen(true); fbShowForm(); fbRenderAccount();
+    return;
+  }
+  fbAuthScreen(false);
+  fbDocRef = fb.doc(fbDb, 'users', u.uid);
+  fbReconciled = false;
+  fbSetState('loading');
+  fbSubscribe();
+}
+
+// ---- Нэвтрэх товчнууд ----
+window.fbToggleMode = function(){
+  fbSignUp = !fbSignUp;
+  $fb('authSubmit').textContent = fbSignUp ? 'Бүртгүүлэх' : 'Нэвтрэх';
+  $fb('authToggle').textContent = fbSignUp ? 'Бүртгэлтэй юу? Нэвтрэх' : 'Бүртгэл үүсгэх';
+  $fb('authPass').autocomplete = fbSignUp ? 'new-password' : 'current-password';
+  fbMsg(''); fbShowForm();
+};
+window.fbEmailSubmit = async function(){
+  if(!fbAvailable) return;
+  const email = $fb('authEmail').value.trim(), pass = $fb('authPass').value;
+  if(!email || !pass){ fbMsg('Имэйл, нууц үгээ бичнэ үү.'); return; }
+  const btn = $fb('authSubmit'); btn.disabled = true; fbMsg('');
+  try{
+    if(fbSignUp) await fb.createUserWithEmailAndPassword(fbAuth, email, pass);
+    else await fb.signInWithEmailAndPassword(fbAuth, email, pass);
+    $fb('authPass').value = '';
+  }catch(e){ fbMsg(fbErr(e)); }
+  btn.disabled = false;
+};
+window.fbGoogle = async function(){
+  if(!fbAvailable) return;
+  fbMsg('');
+  const provider = new fb.GoogleAuthProvider();
+  try{
+    await fb.signInWithPopup(fbAuth, provider);
+  }catch(e){
+    if(e && (e.code==='auth/popup-blocked' || e.code==='auth/operation-not-supported-in-this-environment')){
+      try{ await fb.signInWithRedirect(fbAuth, provider); }catch(e2){ fbMsg(fbErr(e2)); }
+    } else if(!(e && e.code==='auth/cancelled-popup-request')) fbMsg(fbErr(e));
+  }
+};
+window.fbReset = async function(){
+  if(!fbAvailable) return;
+  const email = $fb('authEmail').value.trim();
+  if(!email){ fbMsg('Эхлээд имэйлээ бичнэ үү.'); return; }
+  try{ await fb.sendPasswordResetEmail(fbAuth, email); fbMsg('Нууц үг сэргээх холбоос имэйл рүү илгээгдлээ.', true); }
+  catch(e){ fbMsg(fbErr(e)); }
+};
+window.fbSkip = function(){ fbAuthScreen(false); showToast('Бүртгэлгүй горим: мэдээлэл зөвхөн энэ утсанд хадгалагдана'); };
+window.fbShowLogin = function(){ if(!fbAvailable){ location.reload(); return; } fbAuthScreen(true); fbShowForm(); };
+window.fbSyncNow = function(){ if(fbDocRef && fbReconciled) fbPushNow(); };
+
+window.fbLogout = async function(){
+  if(!fbUser) return;
+  if(!confirm('Бүртгэлээс гарах уу?\n\nМэдээлэл тань бүртгэлд хадгалагдсан хэвээр үлдэж, дахин нэвтрэхэд сэргэнэ. Энэ утсан дээрх хуулбар устна.')) return;
+  if(fbPushTimer || localStorage.getItem(DIRTY_KEY)){
+    await Promise.race([fbPushNow(), new Promise(r=> setTimeout(r, 6000))]);
+  }
+  if((fbInFlight || localStorage.getItem(DIRTY_KEY)) &&
+     !confirm('Сүүлийн өөрчлөлтүүд үүлэнд хараахан хадгалагдаж амжаагүй байна (интернэтээ шалгана уу).\n\nТэгсэн ч гарах уу? Гарвал тэдгээр өөрчлөлт алга болно.')) return;
+  if(fbUnsub){ fbUnsub(); fbUnsub = null; }
+  try{ await fb.signOut(fbAuth); }catch(e){}
+  fbClearLocal();
+  localStorage.removeItem(OWNER_KEY); localStorage.removeItem(DIRTY_KEY);
+  location.reload();
+};
+
+function fbRenderAccount(){
+  const el = $fb('fbAccountStatus');
+  if(!el) return;
+  const show = (id, yes)=>{ const b = $fb(id); if(b) b.classList.toggle('hidden', !yes); };
+  if(!fbAvailable){
+    el.innerHTML = '<span style="color:var(--muted);">Үүлэн хадгалалт ачаалагдсангүй. Интернэтээ шалгаад апп-аа дахин нээнэ үү.</span>';
+    show('fbSyncBtn', false); show('fbLoginBtn', true); show('fbLogoutBtn', false);
+    return;
+  }
+  if(!fbUser){
+    el.innerHTML = '<span style="color:var(--muted);">Нэвтрээгүй — мэдээлэл зөвхөн энэ утсанд хадгалагдаж байна.</span>';
+    show('fbSyncBtn', false); show('fbLoginBtn', true); show('fbLogoutBtn', false);
+    return;
+  }
+  const who = escapeHtml(fbUser.email || fbUser.displayName || 'Бүртгэл');
+  const t = fbLastSync ? pad(fbLastSync.getHours())+':'+pad(fbLastSync.getMinutes()) : '';
+  const states = {
+    loading: '<span style="color:var(--muted);">Синк хийж байна…</span>',
+    waiting: '<span style="color:var(--muted);">Интернэт холболтыг хүлээж байна…</span>',
+    saving:  '<span style="color:var(--muted);">Хадгалж байна…</span>',
+    ok:      '<span style="color:var(--muted);">Үүлэнд хадгалагдсан' + (t ? ' · ' + t : '') + '</span>',
+    error:   '<span style="color:var(--red);">⚠ Хадгалж чадсангүй — интернэтээ шалгана уу</span>'
+  };
+  el.innerHTML = '<span style="color:var(--green2); font-weight:700;">✓ Нэвтэрсэн</span> · ' + who + '<br>' + (states[fbState] || '');
+  show('fbSyncBtn', true); show('fbLoginBtn', false); show('fbLogoutBtn', true);
+}
+window.fbRenderAccount = fbRenderAccount;
+
+// ---- Ачаалах ----
+$fb('authPass').addEventListener('keydown', e=>{ if(e.key==='Enter') fbEmailSubmit(); });
+(async ()=>{
+  try{
+    const timeout = new Promise((_, rej)=> setTimeout(()=> rej(new Error('timeout')), 12000));
+    const [appMod, authMod, fsMod] = await Promise.race([Promise.all([
+      import(FB_SDK + 'firebase-app.js'),
+      import(FB_SDK + 'firebase-auth.js'),
+      import(FB_SDK + 'firebase-firestore.js')
+    ]), timeout]);
+    Object.assign(fb, appMod, authMod, fsMod);
+    const app = fb.initializeApp(firebaseConfig);
+    fbAuth = fb.getAuth(app);
+    fbAuth.languageCode = 'mn';
+    try{
+      fbDb = fb.initializeFirestore(app, { localCache: fb.persistentLocalCache({ tabManager: fb.persistentMultipleTabManager() }) });
+    }catch(e){ fbDb = fb.getFirestore(app); }
+    fbAvailable = true;
+    fb.getRedirectResult(fbAuth).catch(e=> fbMsg(fbErr(e)));
+    fb.onAuthStateChanged(fbAuth, fbOnUser);
+  }catch(e){
+    // Firebase ачаалагдсангүй (интернэтгүй гэх мэт) — апп урьдын адил утсан дээрээ ажиллана
+    fbAvailable = false;
+    fbAuthScreen(false);
+    fbRenderAccount();
+  }
+})();
 </script>
 <script>
 if ('serviceWorker' in navigator) { window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); }); }
