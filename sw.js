@@ -1,5 +1,5 @@
 // Эм & Уналт — offline service worker
-const CACHE = 'em-unalt-v3';
+const CACHE = 'em-unalt-v4';
 const ASSETS = [
   './',
   './index.html',
@@ -28,6 +28,17 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET') return;
+  // Firebase SDK files: cache them so the app can start offline
+  if (req.url.startsWith('https://www.gstatic.com/firebasejs/')) {
+    e.respondWith(
+      caches.match(req).then((cached) => cached || fetch(req).then((res) => {
+        const copy = res.clone();
+        caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
+        return res;
+      }))
+    );
+    return;
+  }
   // Only handle same-origin requests; let Google APIs / external calls go straight to network
   if (new URL(req.url).origin !== self.location.origin) return;
   // For navigations, serve cached app shell when offline
