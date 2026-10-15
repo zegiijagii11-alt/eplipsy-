@@ -950,7 +950,6 @@
 </div>
 
 <div id="toast" class="toast"></div>
-
 <!-- Bottom navigation -->
 <nav class="bottomnav" id="bottomNav">
   <button class="navbtn active" data-tab="home" onclick="navTo('home')">
@@ -1601,8 +1600,8 @@ function buildMedsICS(meds){
   return out.join('\r\n');
 }
 
-async function exportMedsICS(){
-  const meds = loadMeds();
+async function exportMedsICS(medsToExport){
+  const meds = Array.isArray(medsToExport) ? medsToExport : loadMeds();
   if(meds.length === 0){ showToast('Эхлээд эм нэмнэ үү', true); return; }
   const ics = buildMedsICS(meds);
   const filename = `emийн-хуваари-${todayStr()}.ics`;
@@ -1613,7 +1612,10 @@ async function exportMedsICS(){
       await navigator.share({ files:[file], title:'Эмийн хуваарь', text:'Хуанлид нэмж сэрүүлэг болгоно уу.' });
       showToast('Хуваалцах цонх нээгдлээ — "Календарьт нэмэх" сонгоно уу');
       return;
-    }catch(e){ /* fall through to download */ }
+    }catch(e){
+      if(e && e.name === 'AbortError') return; // хэрэглэгч хаасан — файл татахгүй
+      /* бусад алдаа: файл татах руу шилжинэ */
+    }
   }
   const url = URL.createObjectURL(file);
   const a = document.createElement('a');
@@ -1987,11 +1989,13 @@ function submitMedForm(){
   }
 
   let meds = loadMeds();
+  let newMed = null;
   if(editingMedId){
     meds = meds.map(m => m.id===editingMedId ? {...m, name, dose, time, startDate, endDate, schedule, stock, perDose} : m);
     showToast('Сануулга шинэчлэгдлээ');
   } else {
-    meds.push({ id: uid(), name, dose, time, startDate, endDate, schedule, stock, perDose });
+    newMed = { id: uid(), name, dose, time, startDate, endDate, schedule, stock, perDose };
+    meds.push(newMed);
     showToast('Сануулга нэмэгдлээ');
   }
   meds.sort((a,b)=> a.time.localeCompare(b.time));
@@ -1999,6 +2003,8 @@ function submitMedForm(){
   editingMedId = null;
   showView(medFormReturn || 'home');
   scheduleReminders();
+  // Шинэ эмийг хуанлид шууд нэмэх цонх нээнэ ("Хадгалах" товшилт дотор дуудах ёстой)
+  if(newMed) exportMedsICS([newMed]);
 }
 
 function closeMedForm(){ editingMedId = null; showView(medFormReturn || 'home'); }
