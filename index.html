@@ -1581,18 +1581,46 @@ function buildMedsICS(meds){
     out.push('END:VEVENT');
   }
 
+  // Эхлэх-дуусах хооронд (weekdays өгвөл зөвхөн тэр гарагууд) хэдэн удаа уухыг тоолно.
+  // UNTIL-ийн оронд COUNT ашиглана: floating DTSTART + UTC UNTIL хослолыг зарим хуанли
+  // хүлээж авахгүй, хязгааргүй давтдаг байсан.
+  function occurrences(start, end, weekdays){
+    const out = [];
+    const d = new Date(start + 'T00:00:00');
+    const last = new Date(end + 'T00:00:00');
+    while(d <= last){
+      if(!weekdays || weekdays.includes(d.getDay())) out.push(dateKey(d));
+      d.setDate(d.getDate() + 1);
+    }
+    return out;
+  }
+
   meds.forEach(m=>{
     const sch = m.schedule || { type:'daily' };
     const start = m.startDate || todayStr();
-    const untilPart = m.endDate ? (';UNTIL=' + m.endDate.replace(/-/g,'') + 'T235959Z') : '';
     if(sch.type === 'dates'){
       (sch.dates || []).forEach((ds,i)=> vevent(`med-${m.id}-${i}@em-unalt`, icsLocal(ds, m.time), null, m.name, m.dose));
     } else if(sch.type === 'weekly'){
-      const days = (sch.weekdays || []).map(d=>ICS_BYDAY[d]).join(',');
-      const rrule = `FREQ=WEEKLY;BYDAY=${days}${untilPart}`;
-      vevent(`med-${m.id}@em-unalt`, icsLocal(start, m.time), rrule, m.name, m.dose);
+      const wds = sch.weekdays || [];
+      if(wds.length === 0) return;
+      const days = wds.map(d=>ICS_BYDAY[d]).join(',');
+      // DTSTART нь сонгосон гарагуудын аль нэг дээр байх ёстой (эс тэгвээс илүү өдөр нэмэгдэнэ)
+      const first = occurrences(start, dateKey(new Date(new Date(start+'T00:00:00').getTime() + 6*864e5)), wds)[0];
+      let countPart = '';
+      if(m.endDate){
+        const n = occurrences(start, m.endDate, wds).length;
+        if(n === 0) return;
+        countPart = ';COUNT=' + n;
+      }
+      vevent(`med-${m.id}@em-unalt`, icsLocal(first, m.time), `FREQ=WEEKLY;BYDAY=${days}${countPart}`, m.name, m.dose);
     } else {
-      vevent(`med-${m.id}@em-unalt`, icsLocal(start, m.time), `FREQ=DAILY${untilPart}`, m.name, m.dose);
+      let countPart = '';
+      if(m.endDate){
+        const n = occurrences(start, m.endDate, null).length;
+        if(n === 0) return;
+        countPart = ';COUNT=' + n;
+      }
+      vevent(`med-${m.id}@em-unalt`, icsLocal(start, m.time), `FREQ=DAILY${countPart}`, m.name, m.dose);
     }
   });
 

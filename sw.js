@@ -1,5 +1,5 @@
 // Эм & Уналт — offline service worker
-const CACHE = 'em-unalt-v6';
+const CACHE = 'em-unalt-v7';
 const ASSETS = [
   './',
   './index.html',
