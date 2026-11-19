@@ -448,7 +448,7 @@
   document.documentElement.classList.add('is-native');
 
   function plug(n){ return C.registerPlugin ? C.registerPlugin(n) : C.Plugins[n]; }
-  var LN = plug('LocalNotifications'), Share = plug('Share'), FS = plug('Filesystem'), App = plug('App');
+  var LN = plug('LocalNotifications'), Share = plug('Share'), FS = plug('Filesystem'), App = plug('App'), FA = plug('FirebaseAuthentication');
 
   var CHANNEL = 'med_reminders', ACTIONS = 'MED_ACTIONS';
   var DAYS_AHEAD = 14, MAX_PENDING = 400, FOLLOW_UPS = [10, 20, 30]; // minutes after the dose time
@@ -645,7 +645,9 @@
 
   window.NativeApp = {
     isNative: true, resync: resync, shareFile: shareFile, permissionLabel: permissionLabel,
-    requestPermission: requestPermission, requestExact: requestExact
+    requestPermission: requestPermission, requestExact: requestExact,
+    googleSignIn: async function(){ var r = await FA.signInWithGoogle(); return (r && r.credential && r.credential.idToken) || null; },
+    googleSignOut: async function(){ try{ await FA.signOut(); }catch(e){} }
   };
   window.addEventListener('load', setup);
 })();
@@ -3803,7 +3805,18 @@ window.fbEmailSubmit = async function(){
 window.fbGoogle = async function(){
   if(!fbAvailable) return;
   fbMsg('');
-  if(window.NativeApp && NativeApp.isNative){ fbMsg('Апп хувилбарт Google-ээр нэвтрэх боломж удахгүй нэмэгдэнэ. Одоохондоо имэйл, нууц үгээр нэвтэрнэ үү.'); return; }
+  if(window.NativeApp && NativeApp.isNative){
+    try{
+      const idToken = await NativeApp.googleSignIn();
+      if(!idToken){ fbMsg('Google нэвтрэлт амжилтгүй боллоо. Дахин оролдоно уу.'); return; }
+      await fb.signInWithCredential(fbAuth, fb.GoogleAuthProvider.credential(idToken));
+    }catch(e){
+      const m = String((e && (e.message || e.code)) || '');
+      if(/cancel/i.test(m)) return;
+      fbMsg(e && e.code && String(e.code).startsWith('auth/') ? fbErr(e) : 'Google нэвтрэлт амжилтгүй: ' + m);
+    }
+    return;
+  }
   const provider = new fb.GoogleAuthProvider();
   try{
     await fb.signInWithPopup(fbAuth, provider);
@@ -3834,6 +3847,7 @@ window.fbLogout = async function(){
      !confirm('Сүүлийн өөрчлөлтүүд үүлэнд хараахан хадгалагдаж амжаагүй байна (интернэтээ шалгана уу).\n\nТэгсэн ч гарах уу? Гарвал тэдгээр өөрчлөлт алга болно.')) return;
   if(fbUnsub){ fbUnsub(); fbUnsub = null; }
   try{ await fb.signOut(fbAuth); }catch(e){}
+  if(window.NativeApp && NativeApp.googleSignOut) await NativeApp.googleSignOut();
   fbClearLocal();
   localStorage.removeItem(OWNER_KEY); localStorage.removeItem(DIRTY_KEY);
   location.reload();
