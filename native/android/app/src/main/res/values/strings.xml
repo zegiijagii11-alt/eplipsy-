@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Эм &amp; Уналт</string>
+    <string name="title_activity_main">Эм &amp; Уналт</string>
+    <string name="package_name">io.github.zegiijagii11alt.emunalt</string>
+    <string name="custom_url_scheme">io.github.zegiijagii11alt.emunalt</string>
+</resources>

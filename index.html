@@ -205,6 +205,9 @@
   .linkbtn{background:none; border:none; font-size:13px; font-family:inherit; cursor:pointer; padding:6px 2px; color:var(--accent-soft);}
   .linkbtn.danger{color:var(--red);}
   .gdrive-status{font-size:13px; line-height:1.5; background:var(--bg); border-radius:12px; padding:12px 14px;}
+  .is-native .web-only{display:none !important;}
+  .native-only{display:none;}
+  .is-native .native-only{display:block;}
   .gdrive-help{margin-top:14px; font-size:12.5px; color:var(--muted);}
   .gdrive-help summary{cursor:pointer; font-weight:600; color:var(--accent-soft); padding:6px 0;}
   .gdrive-help ol{margin:8px 0 0; padding-left:20px; line-height:1.7;}
@@ -435,6 +438,218 @@
   .auth-skip{margin-top:6px; color:rgba(255,255,255,.6);}
   .auth-emerg{position:static !important; transform:none !important; margin-top:28px;}
 </style>
+<script>
+/* ===== Capacitor native bridge (Android app). On the web this block does nothing. ===== */
+(function(){
+  var C = window.Capacitor;
+  var isNative = !!(C && C.isNativePlatform && C.isNativePlatform());
+  window.NativeApp = { isNative: isNative, resync: function(){} };
+  if(!isNative) return;
+  document.documentElement.classList.add('is-native');
+
+  function plug(n){ return C.registerPlugin ? C.registerPlugin(n) : C.Plugins[n]; }
+  var LN = plug('LocalNotifications'), Share = plug('Share'), FS = plug('Filesystem'), App = plug('App');
+
+  var CHANNEL = 'med_reminders', ACTIONS = 'MED_ACTIONS';
+  var DAYS_AHEAD = 14, MAX_PENDING = 400, FOLLOW_UPS = [10, 20, 30]; // minutes after the dose time
+  var SNOOZE_MIN = 15, SNOOZE_BASE = 900000;
+  var IDMAP_KEY = 'epilepsy_native_idmap'; // notification id -> "YYYY-MM-DD|medId"
+  var ready = false, timer = null, running = false, again = false;
+
+  function p2(n){ return (n<10?'0':'')+n; }
+  function ymd(d){ return d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate()); }
+  function idmap(){ try{ return JSON.parse(localStorage.getItem(IDMAP_KEY)) || {}; }catch(e){ return {}; } }
+  function saveIdmap(m){ try{ localStorage.setItem(IDMAP_KEY, JSON.stringify(m)); }catch(e){} }
+  function bodyFor(m){ return m.name + (m.dose ? ' — ' + m.dose : '') + ' (' + m.time + ')'; }
+
+  async function permGranted(){
+    try{ return (await LN.checkPermissions()).display === 'granted'; }catch(e){ return false; }
+  }
+
+  // Rebuild all scheduled reminders from current data (debounced).
+  function resync(){ clearTimeout(timer); timer = setTimeout(run, 700); }
+  async function run(){
+    if(!ready) return;
+    if(running){ again = true; return; }
+    running = true;
+    try{ await schedule(); }catch(e){ console.warn('reminder sync failed', e); }
+    running = false;
+    if(again){ again = false; resync(); }
+  }
+
+  async function schedule(){
+    if(!(await permGranted())) return;
+    var meds = loadMeds(), taken = loadTaken(), settings = loadSettings();
+    var follow = settings.repeatReminders !== false;
+    var map = idmap(), medIds = {};
+    meds.forEach(function(m){ medIds[m.id] = true; });
+    function done(key){ return !!taken[key] || !medIds[key.split('|')[1]]; }
+
+    // Cancel everything pending except snoozes that are still relevant
+    var pending = (await LN.getPending()).notifications || [];
+    var cancel = pending.filter(function(n){ return n.id < SNOOZE_BASE || !map[n.id] || done(map[n.id]); })
+                        .map(function(n){ return { id: n.id }; });
+    if(cancel.length) await LN.cancel({ notifications: cancel });
+
+    // Clear delivered notifications for doses already marked
+    try{
+      var delivered = (await LN.getDeliveredNotifications()).notifications || [];
+      var stale = delivered.filter(function(n){ return map[n.id] && done(map[n.id]); });
+      if(stale.length) await LN.removeDeliveredNotifications({ notifications: stale });
+    }catch(e){}
+
+    var newMap = {};
+    Object.keys(map).forEach(function(id){ if(+id >= SNOOZE_BASE && !done(map[id])) newMap[id] = map[id]; });
+
+    var now = Date.now(), list = [];
+    for(var day = 0; day < DAYS_AHEAD; day++){
+      var d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate() + day);
+      var ds = ymd(d);
+      meds.forEach(function(m){
+        if(!m.time || !isMedDueOn(m, ds)) return;
+        var key = ds + '|' + m.id;
+        if(taken[key]) return; // already marked taken / missed
+        var hm = m.time.split(':');
+        var at = new Date(d); at.setHours(+hm[0], +hm[1], 0, 0);
+        [0].concat(follow ? FOLLOW_UPS : []).forEach(function(off){
+          var t = at.getTime() + off*60000;
+          if(t > now + 3000) list.push({ t: t, off: off, m: m, key: key, ds: ds });
+        });
+      });
+    }
+    list.sort(function(a, b){ return a.t - b.t; });
+    list = list.slice(0, MAX_PENDING);
+
+    var notifs = list.map(function(x, i){
+      var id = 1000 + i;
+      newMap[id] = x.key;
+      return {
+        id: id,
+        channelId: CHANNEL,
+        title: x.off ? '⏰ Эмээ уусан уу?' : '💊 Эм уух цаг боллоо',
+        body: bodyFor(x.m),
+        schedule: { at: new Date(x.t), allowWhileIdle: true },
+        actionTypeId: ACTIONS,
+        group: 'med-' + x.key,
+        autoCancel: true,
+        extra: { medId: x.m.id, date: x.ds }
+      };
+    });
+    saveIdmap(newMap);
+    if(notifs.length) await LN.schedule({ notifications: notifs });
+  }
+
+  async function snooze(n){
+    var ex = n.extra || {};
+    var id = SNOOZE_BASE + (Math.floor(Date.now()/1000) % 90000);
+    var map = idmap(); map[id] = ex.date + '|' + ex.medId; saveIdmap(map);
+    await LN.schedule({ notifications: [{
+      id: id, channelId: CHANNEL,
+      title: '⏰ Эмээ уусан уу?', body: n.body || '',
+      schedule: { at: new Date(Date.now() + SNOOZE_MIN*60000), allowWhileIdle: true },
+      actionTypeId: ACTIONS, group: 'med-' + ex.date + '|' + ex.medId, autoCancel: true,
+      extra: { medId: ex.medId, date: ex.date }
+    }]});
+  }
+
+  function markFromNotification(ex){
+    if(!ex || !ex.medId || !ex.date) return;
+    var key = ex.date + '|' + ex.medId;
+    var taken = loadTaken();
+    if(taken[key] === 'taken') return;
+    if(ex.date === todayStr()){
+      markTaken(ex.medId, 'taken'); // also updates stock
+    } else {
+      taken[key] = 'taken'; saveTaken(taken);
+      try{ renderHome(); }catch(e){}
+    }
+  }
+
+  async function onAction(ev){
+    var n = ev.notification || {}, ex = n.extra || {};
+    try{
+      if(ev.actionId === 'taken'){
+        markFromNotification(ex);
+        showToast('✓ Эм уусан гэж тэмдэглэгдлээ');
+      } else if(ev.actionId === 'snooze'){
+        await snooze(n);
+        showToast(SNOOZE_MIN + ' минутын дараа дахин сануулна');
+        try{ App.minimizeApp(); }catch(e){}
+      } else {
+        if(typeof showView === 'function' && document.getElementById('lockScreen').classList.contains('hidden')) showView('home');
+      }
+    }catch(e){ console.warn(e); }
+    resync();
+  }
+
+  function onBack(){
+    var lock = document.getElementById('lockScreen');
+    if(lock && !lock.classList.contains('hidden')){ App.minimizeApp(); return; }
+    if(typeof currentView !== 'undefined' && currentView !== 'home' && typeof showView === 'function'){ showView('home'); return; }
+    App.minimizeApp();
+  }
+
+  async function shareFile(filename, text, mime, title){
+    var r = await FS.writeFile({ path: filename, data: text, directory: 'CACHE', encoding: 'utf8' });
+    try{
+      await Share.share({ title: title, dialogTitle: title, files: [r.uri] });
+      return true;
+    }catch(e){ return false; } // user closed the share sheet
+  }
+
+  async function permissionLabel(){
+    var p = 'prompt', ex = 'granted';
+    try{ p = (await LN.checkPermissions()).display; }catch(e){}
+    try{ ex = (await LN.checkExactNotificationSetting()).exact_alarm; }catch(e){}
+    return { display: p, exact: ex };
+  }
+
+  async function requestPermission(){
+    var p = await LN.requestPermissions();
+    if(p.display !== 'granted'){
+      showToast('Тохиргоо → Апп → Эм & Уналт → Мэдэгдэл хэсгээс асаана уу', true, 6000);
+    }
+    resync();
+    return p.display;
+  }
+
+  async function requestExact(){
+    try{ await LN.changeExactNotificationSetting(); }catch(e){}
+  }
+
+  async function setup(){
+    try{
+      await LN.createChannel({ id: CHANNEL, name: 'Эм уух сануулга', description: 'Эм уух цагийн сануулга',
+                               importance: 5, visibility: 1, vibration: true, lights: true, lightColor: '#3D5C58' });
+    }catch(e){}
+    try{
+      await LN.registerActionTypes({ types: [{ id: ACTIONS, actions: [
+        { id: 'taken', title: 'Уусан ✓' },
+        { id: 'snooze', title: SNOOZE_MIN + ' мин дараа' }
+      ]}]});
+    }catch(e){}
+    LN.addListener('localNotificationActionPerformed', onAction);
+    App.addListener('backButton', onBack);
+    App.addListener('resume', function(){
+      try{ renderHome(); }catch(e){}
+      try{ if(typeof updateNotifPermLabel === 'function') updateNotifPermLabel(); }catch(e){}
+      resync();
+    });
+    ready = true;
+    try{
+      var p = await LN.checkPermissions();
+      if(p.display !== 'granted' && p.display !== 'denied') await LN.requestPermissions();
+    }catch(e){}
+    resync();
+  }
+
+  window.NativeApp = {
+    isNative: true, resync: resync, shareFile: shareFile, permissionLabel: permissionLabel,
+    requestPermission: requestPermission, requestExact: requestExact
+  };
+  window.addEventListener('load', setup);
+})();
+</script>
 </head>
 <body>
 
@@ -836,7 +1051,15 @@
         </div>
         <button class="addbtn" onclick="requestNotifPermission()">Зөвшөөрөх</button>
       </div>
-      <div class="settingsnote">⚠️ Сануулга зөвхөн <b>апп нээлттэй үед</b> ажиллана. Апп хаалттай үед цагтаа дуугардаг сэрүүлэг хэрэгтэй бол Сануулга хуудасны <b>"📅 Хуанли/сэрүүлэгт нэмэх"</b> товчоор эмийн хуваарийг утасныхаа Календарь аппд оруулаарай.</div>
+      <div class="settingsrow native-only" style="display:none;" id="exactAlarmRow">
+        <div>
+          <div class="settingslabel">Яг цагтаа сануулах</div>
+          <div class="settingssub" id="exactAlarmStatus">Тодорхойгүй</div>
+        </div>
+        <button class="addbtn" onclick="NativeApp.requestExact()">Асаах</button>
+      </div>
+      <div class="settingsnote native-only">✅ Апп <b>хаалттай байсан ч</b> эм уух цагт сануулга ирнэ. Сануулга дээрх <b>"Уусан ✓"</b> товчоор шууд тэмдэглэнэ.<br><br>📱 <b>Samsung утсан дээр</b> сануулга алдагдахгүйн тулд: Тохиргоо → Апп → Эм & Уналт → Батарей → <b>"Хязгааргүй"</b> болгоно уу.</div>
+      <div class="settingsnote web-only">⚠️ Сануулга зөвхөн <b>апп нээлттэй үед</b> ажиллана. Апп хаалттай үед цагтаа дуугардаг сэрүүлэг хэрэгтэй бол Сануулга хуудасны <b>"📅 Хуанли/сэрүүлэгт нэмэх"</b> товчоор эмийн хуваарийг утасныхаа Календарь аппд оруулаарай.</div>
 
       <div class="sectionrow" style="margin-top:24px;">
         <h3 class="sectiontitle">🚨 Яаралтай тусламж</h3>
@@ -887,6 +1110,7 @@
         <input type="file" id="restoreFileInput" accept="application/json,.json" class="hidden" onchange="importBackup(event)">
       </div>
 
+      <div class="web-only">
       <div class="sectionrow" style="margin-top:24px;">
         <h3 class="sectiontitle">Google Drive синк ☁️</h3>
       </div>
@@ -922,6 +1146,7 @@
           <li>Дараа нь "Google Drive-тэй холбох" дарж нэвтэрнэ.</li>
         </ol>
       </details>
+      </div>
 
       <div class="settingsnote" style="margin-top:24px;">
         <b>Эм & Уналт</b> — эпилепситэй хүнд зориулсан хувийн хянах дэвтэр. Нэвтэрсэн бол мэдээлэл тань таны бүртгэлд (Firebase) хадгалагдаж, нэвтэрсэн бүх утсан дээр синк болно. Зөвхөн та өөрөө харах эрхтэй.<br><br>
@@ -1085,6 +1310,7 @@ function saveGDriveCfg(v){ localStorage.setItem(GDRIVE_KEY, JSON.stringify(v)); 
 function onDataChanged(key){
   // Auto-sync data changes up to Google Drive (debounced)
   const DATA_KEYS = ["epilepsy_meds_v2","epilepsy_logs_v2","epilepsy_taken_v2","epilepsy_settings_v2","epilepsy_profile_v2","epilepsy_daily_v2","epilepsy_emergency_v2"];
+  if(window.NativeApp && (key==="epilepsy_meds_v2" || key==="epilepsy_taken_v2" || key==="epilepsy_settings_v2")) NativeApp.resync();
   if(DATA_KEYS.indexOf(key)>=0){ scheduleGDrivePush(); if(window.fbSchedulePush) window.fbSchedulePush(key); }
 }
 
@@ -1504,6 +1730,11 @@ async function exportBackup(){
   const file = new File([json], filename, { type: "application/json" });
   markBackupDone();
 
+  if(window.NativeApp && NativeApp.isNative){
+    if(await NativeApp.shareFile(filename, json, 'application/json', 'Эм & Уналт — нөөц хуулбар')) showToast('Хуваалцах цонх нээгдлээ');
+    return;
+  }
+
   if(navigator.share && navigator.canShare && navigator.canShare({ files:[file] })){
     try{
       await navigator.share({
@@ -1706,6 +1937,10 @@ async function exportMedsICS(medsToExport, hint){
   const ics = buildMedsICS(meds);
   const filename = `emийн-хуваари-${todayStr()}.ics`;
   const file = new File([ics], filename, { type: 'text/calendar' });
+  if(window.NativeApp && NativeApp.isNative){
+    if(await NativeApp.shareFile('em-huvaari-' + todayStr() + '.ics', ics, 'text/calendar', 'Эмийн хуваарь')) showToast(hint || 'Хуваалцах цонхноос Календарь аппыг сонгоно уу', false, hint ? 6000 : 2500);
+    return;
+  }
 
   if(navigator.share && navigator.canShare && navigator.canShare({ files:[file] })){
     try{
@@ -2803,6 +3038,12 @@ function printReport(){
   `;
   const html = '<!DOCTYPE html><html lang="mn"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Эмчийн тайлан</title><style>'+css+'</style></head><body>'+content.innerHTML+'</body></html>';
 
+  if(window.NativeApp && NativeApp.isNative){
+    // Android WebView cannot print: share the report as an HTML file (open in Chrome → Print / Save as PDF)
+    NativeApp.shareFile('emchiin-tailan-' + todayStr() + '.html', html, 'text/html', 'Эмчийн тайлан')
+      .then(ok=>{ if(ok) showToast('Файлыг Chrome-оор нээж Хэвлэх / PDF болгож хадгална уу', false, 6000); });
+    return;
+  }
   // Print via a hidden iframe — reliable on mobile and inside installed PWA
   const old = document.getElementById('printFrame');
   if(old) old.remove();
@@ -3187,6 +3428,16 @@ function toggleRepeat(){
 
 function updateNotifPermLabel(){
   const el = document.getElementById('notifPermStatus');
+  if(window.NativeApp && NativeApp.isNative){
+    NativeApp.permissionLabel().then(r=>{
+      const m = { granted:'Зөвшөөрөгдсөн ✓', denied:'Татгалзсан — утасны тохиргооноос асаана уу' };
+      if(el) el.textContent = m[r.display] || 'Хараахан асуугаагүй';
+      const row = document.getElementById('exactAlarmRow'), st = document.getElementById('exactAlarmStatus');
+      if(row) row.style.display = r.exact==='granted' ? 'none' : 'flex';
+      if(st) st.textContent = 'Унтраалттай — сануулга хэдэн минут хоцорч магадгүй';
+    });
+    return;
+  }
   if(!('Notification' in window)){
     el.textContent = 'Энэ хөтөч дэмждэггүй';
     return;
@@ -3196,6 +3447,7 @@ function updateNotifPermLabel(){
 }
 
 function requestNotifPermission(){
+  if(window.NativeApp && NativeApp.isNative){ NativeApp.requestPermission().then(()=> updateNotifPermLabel()); return; }
   if(!('Notification' in window)){ showToast('Энэ хөтөч дэмждэггүй'); return; }
   Notification.requestPermission().then(()=> updateNotifPermLabel());
 }
@@ -3313,6 +3565,7 @@ function submitEmergencyForm(){
 // ---- In-app repeating reminder logic (works only while this tab/app is open) ----
 let activeReminders = {}; // medId -> intervalId
 function checkReminders(){
+  if(window.NativeApp && NativeApp.isNative) return; // Android app: system notifications handle reminders
   const s = loadSettings();
   if(!s.repeatReminders) return;
   const meds = loadMeds();
@@ -3351,6 +3604,7 @@ function fireReminder(m){
 }
 
 function scheduleReminders(){
+  if(window.NativeApp) NativeApp.resync();
   Object.values(activeReminders).forEach(id=> clearInterval(id));
   activeReminders = {};
   checkReminders();
@@ -3549,6 +3803,7 @@ window.fbEmailSubmit = async function(){
 window.fbGoogle = async function(){
   if(!fbAvailable) return;
   fbMsg('');
+  if(window.NativeApp && NativeApp.isNative){ fbMsg('Апп хувилбарт Google-ээр нэвтрэх боломж удахгүй нэмэгдэнэ. Одоохондоо имэйл, нууц үгээр нэвтэрнэ үү.'); return; }
   const provider = new fb.GoogleAuthProvider();
   try{
     await fb.signInWithPopup(fbAuth, provider);
@@ -3641,7 +3896,7 @@ $fb('authPass').addEventListener('keydown', e=>{ if(e.key==='Enter') fbEmailSubm
 })();
 </script>
 <script>
-if ('serviceWorker' in navigator) { window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); }); }
+if ('serviceWorker' in navigator && !(window.NativeApp && NativeApp.isNative)) { window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); }); }
 </script>
 </body>
 </html>

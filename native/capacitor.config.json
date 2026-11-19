@@ -1,0 +1,14 @@
+{
+  "appId": "io.github.zegiijagii11alt.emunalt",
+  "appName": "Эм & Уналт",
+  "webDir": "www",
+  "android": {
+    "backgroundColor": "#3D5C58"
+  },
+  "plugins": {
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_pill",
+      "iconColor": "#3D5C58"
+    }
+  }
+}

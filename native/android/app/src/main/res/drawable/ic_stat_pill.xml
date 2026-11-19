@@ -1,0 +1,9 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp"
+    android:viewportWidth="24" android:viewportHeight="24">
+    <!-- Diagonal capsule: one half filled, one half outlined -->
+    <path android:fillColor="#FFFFFFFF"
+        android:pathData="M4.22,19.78a5,5 0,0 1,0 -7.07L8.46,8.46l7.07,7.07 -4.24,4.24a5,5 0,0 1,-7.07 0z"/>
+    <path android:fillColor="#FFFFFFFF"
+        android:pathData="M19.78,4.22a5,5 0,0 0,-7.07 0L8.46,8.46l7.07,7.07 4.24,-4.24a5,5 0,0 0,0 -7.07zM18.36,9.88l-3.54,3.54 -4.24,-4.24 3.54,-3.54a3,3 0,0 1,4.24 4.24z"/>
+</vector>
